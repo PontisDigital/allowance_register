@@ -42,6 +42,22 @@ async fn function_handler(event: Request) -> Result<Response<Body>, Error>
 		.body())
 		.unwrap_or(ApiEntryReq::default());
 
+	if entry_req.username.contains(" ")
+	{
+		eprintln!("Invalid Username Character");
+		let json_body = json!(
+			{
+				"failed": true,
+				"message": "invalid characters in username",
+			}
+			).to_string();
+		return Ok(Response::builder()
+			.status(500)
+			.header("content-type", "application/json")
+			.body(json_body.into())
+			.map_err(Box::new)?);
+	}
+
 	match std::env::var("FIREBASE_WEB_API_KEY")
 	{
 		Ok(api_key) => 
@@ -62,7 +78,7 @@ async fn function_handler(event: Request) -> Result<Response<Body>, Error>
 
 			if !existing_users.is_empty()
 			{
-				eprintln!("FIREBASE_WEB_API_KEY is not set");
+				eprintln!("Username Already Exists");
 				let json_body = json!(
 					{
 						"failed": true,
