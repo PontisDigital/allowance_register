@@ -47,6 +47,34 @@ async fn function_handler(event: Request) -> Result<Response<Body>, Error>
 		Ok(api_key) => 
 		{
 			// check if username already exists
+			let db = FirestoreDb::new("allowance-fa781").await.unwrap();
+
+			let existing_users = db.fluent()
+									.select()
+									.from("users")
+									.filter(|d|
+									{
+										d.field("username").eq(&entry_req.username)
+									})
+									.obj::<User>()
+									.query()
+									.await?;
+
+			if !existing_users.is_empty()
+			{
+				eprintln!("FIREBASE_WEB_API_KEY is not set");
+				let json_body = json!(
+					{
+						"failed": true,
+						"message": "username already exists",
+					}
+					).to_string();
+				return Ok(Response::builder()
+					.status(500)
+					.header("content-type", "application/json")
+					.body(json_body.into())
+					.map_err(Box::new)?);
+			}
 
 			// sign up with firebase auth
 			let auth = firebase_auth_sdk::FireAuth::new(api_key);
@@ -57,9 +85,7 @@ async fn function_handler(event: Request) -> Result<Response<Body>, Error>
 				Ok(res) =>
 				{
 					println!("USER ID: {}", res.local_id);
-					let db = FirestoreDb::new("allowance-fa781").await.unwrap();
-
-					let user = User {email: res.email, username: entry_req.username.to_lowercase() };
+					let user = User {email: res.email, username: entry_req.username.to_lowercase()};
 					
 					// insert user into db
 					db.fluent()
