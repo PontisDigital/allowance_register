@@ -1,5 +1,4 @@
 use lambda_http::{run, service_fn, Body, Error, Request, Response};
-use rust_decimal::Decimal;
 use serde_json::json;
 use firestore::FirestoreDb;
 
@@ -126,12 +125,58 @@ async fn function_handler(event: Request) -> Result<Response<Body>, Error>
 					let mut allowances: Vec<Allowance> = vec![];
 					*/
 
-					let json_body = json!({}).to_string();
-					Ok(Response::builder()
-						.status(200)
-						.header("content-type", "application/json")
-						.body(json_body.into())
-						.map_err(Box::new)?)
+					// Send a confirmation email
+					let sendgrid_env_var = std::env::var("SENDGRID_API_KEY");
+					match sendgrid_env_var
+					{
+						Ok(token) => 
+						{
+							let client = reqwest::Client::new();
+							let res = client.post("https://api.sendgrid.com/v3/mail/send")
+								.bearer_auth(token)
+								.header("content-type", "application/json")
+								.body(json!(
+								{
+									"from":{
+										"email":"confirmation@allowance.fund"
+									 },
+									"personalizations":
+									[
+										{
+											"to":[
+													{
+													   "email": entry_req.email
+													},
+												 ],
+											"dynamic_template_data":
+											{
+												"username": entry_req.username,
+											}
+										}
+									],
+									"template_id":"d-f9bdc147ca1847b59ff50ea3be406da5"
+								}
+								).to_string())
+								.send()
+								.await?;
+
+							Ok(Response::builder()
+								.status(res.status())
+								.header("content-type", "application/json")
+								.body(res.json().await?)
+								.map_err(Box::new)?)
+						},
+						Err(_) =>
+						{
+							eprintln!("SENDGRID_API_KEY is not set");
+							let json_body = json!({}).to_string();
+							Ok(Response::builder()
+								.status(200)
+								.header("content-type", "application/json")
+								.body(json_body.into())
+								.map_err(Box::new)?)
+						}
+					}
 				},
 				Err(_) =>
 				{
