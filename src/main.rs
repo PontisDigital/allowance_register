@@ -41,7 +41,7 @@ async fn function_handler(event: Request) -> Result<Response<Body>, Error>
 		.body())
 		.unwrap_or(ApiEntryReq::default());
 
-	if entry_req.username.contains(" ")
+	if entry_req.username.contains(" ") || entry_req.username.contains("@")
 	{
 		eprintln!("Invalid Username Character");
 		let json_body = json!(
