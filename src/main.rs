@@ -1,6 +1,7 @@
 use lambda_http::{run, service_fn, Body, Error, Request, Response};
 use serde_json::json;
 use firestore::FirestoreDb;
+use chrono::Utc;
 
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 struct Allowance
@@ -14,6 +15,7 @@ struct User
 {
 	email: String,
 	username: String,
+	created_at: String,
 }
 
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
@@ -99,8 +101,11 @@ async fn function_handler(event: Request) -> Result<Response<Body>, Error>
 			{
 				Ok(res) =>
 				{
-					println!("USER ID: {}", res.local_id);
-					let user = User {email: res.email, username: entry_req.username.to_lowercase()};
+					let user = User {
+						email: res.email,
+						username: entry_req.username.to_lowercase(),
+						created_at: Utc::now().to_rfc3339(),
+					};
 					
 					// insert user into db
 					db.fluent()
@@ -132,13 +137,14 @@ async fn function_handler(event: Request) -> Result<Response<Body>, Error>
 						Ok(token) => 
 						{
 							let client = reqwest::Client::new();
-							let res = client.post("https://api.sendgrid.com/v3/mail/send")
+							client.post("https://api.sendgrid.com/v3/mail/send")
 								.bearer_auth(token)
 								.header("content-type", "application/json")
 								.body(json!(
 								{
 									"from":{
-										"email":"confirmation@allowance.fund"
+										"email":"confirmation@allowance.fund",
+										"name":"Hoya Allowance",
 									 },
 									"personalizations":
 									[
@@ -161,9 +167,9 @@ async fn function_handler(event: Request) -> Result<Response<Body>, Error>
 								.await?;
 
 							Ok(Response::builder()
-								.status(res.status())
+								.status(200)
 								.header("content-type", "application/json")
-								.body(res.json().await?)
+								.body(json!({}).to_string().into())
 								.map_err(Box::new)?)
 						},
 						Err(_) =>
