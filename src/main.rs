@@ -16,6 +16,7 @@ struct User
 	email: String,
 	username: String,
 	created_at: String,
+	user_id: String,
 }
 
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
@@ -105,13 +106,14 @@ async fn function_handler(event: Request) -> Result<Response<Body>, Error>
 						email: res.email,
 						username: entry_req.username.to_lowercase(),
 						created_at: Utc::now().to_rfc3339(),
+						user_id: res.local_id,
 					};
 					
 					// insert user into db
 					db.fluent()
 						.insert()
 						.into("users")
-						.document_id(&res.local_id)
+						.document_id(&user.user_id)
 						.object::<User>(&user)
 						.execute::<User>()
 						.await?;
