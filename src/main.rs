@@ -27,6 +27,8 @@ struct Merchant
 {
 	name: String,
 	logo_url: String,
+	email: String,
+	merchant_uid: String,
 }
 
 #[derive(serde::Deserialize, serde::Serialize, Default)]
@@ -123,19 +125,29 @@ async fn function_handler(event: Request) -> Result<Response<Body>, Error>
 						.execute::<User>()
 						.await?;
 
-					/*
 					// get merchants available to new user
-					let merchants = db.fluent()
+					let merchant = db.fluent()
 										.select()
-										.from("merchants")
+										.by_id_in("merchants")
 										.obj::<Merchant>()
-										.query()
-										.await?;
+										.one("2ryUH8HxUCR7I4JdHSjz")
+										.await?.unwrap();
 
-					// TODO insert allowances
-					let parent_path = db.parent_path("users", &res.local_id);
-					let mut allowances: Vec<Allowance> = vec![];
-					*/
+					let allowance = Allowance {
+						amount: "$0.00".to_string(),
+						merchant_uid: merchant.merchant_uid,
+					};
+
+					let parent_path = db.parent_path("users", &user.user_id)?;
+
+					db.fluent()
+						.insert()
+						.into("allowance")
+						.document_id(&allowance.merchant_uid)
+						.parent(&parent_path)
+						.object::<Allowance>(&allowance)
+						.execute()
+						.await?;
 
 					// Send a confirmation email
 					let sendgrid_env_var = std::env::var("SENDGRID_API_KEY");
