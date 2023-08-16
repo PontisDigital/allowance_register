@@ -65,7 +65,7 @@ async fn function_handler(event: Request) -> Result<Response<Body>, Error>
 		Ok(api_key) => 
 		{
 			// check if username already exists
-			let db = FirestoreDb::new("allowance-fa781").await.unwrap();
+			let db = FirestoreDb::new("allowance-fa781").await?;
 
 			let existing_users = db.fluent()
 									.select()
@@ -171,7 +171,18 @@ async fn function_handler(event: Request) -> Result<Response<Body>, Error>
 							Ok(Response::builder()
 								.status(200)
 								.header("content-type", "application/json")
-								.body(json!({}).to_string().into())
+								.body(
+									if entry_req.want_secure_token.unwrap_or(false)
+									{
+										json!(
+											{
+											}
+										).to_string().into()
+									}
+									else 
+									{
+										json!({}).to_string().into() 
+									})
 								.map_err(Box::new)?)
 						},
 						Err(_) =>
@@ -190,7 +201,7 @@ async fn function_handler(event: Request) -> Result<Response<Body>, Error>
 				{
 					let json_body = json!({"failed": true}).to_string();
 					Ok(Response::builder()
-						.status(500)
+						.status(5001)
 						.header("content-type", "application/json")
 						.body(json_body.into())
 						.map_err(Box::new)?)
