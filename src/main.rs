@@ -2,6 +2,7 @@ use lambda_http::{run, service_fn, Body, Error, Request, Response};
 use serde_json::json;
 use firestore::FirestoreDb;
 use chrono::Utc;
+use uuid::Uuid;
 
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
 struct Allowance
@@ -17,6 +18,8 @@ struct User
 	username: String,
 	created_at: String,
 	user_id: String,
+	email_verification_token: String,
+	email_verified: bool,
 }
 
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
@@ -107,6 +110,8 @@ async fn function_handler(event: Request) -> Result<Response<Body>, Error>
 						username: entry_req.username.to_lowercase(),
 						created_at: Utc::now().to_rfc3339(),
 						user_id: res.local_id,
+						email_verification_token: Uuid::new_v4().to_string(),
+						email_verified: false,
 					};
 					
 					// insert user into db
@@ -153,12 +158,14 @@ async fn function_handler(event: Request) -> Result<Response<Body>, Error>
 										{
 											"to":[
 													{
-													   "email": entry_req.email
+													   "email": entry_req.email,
 													},
 												 ],
 											"dynamic_template_data":
 											{
 												"username": entry_req.username,
+												"uid": user.user_id,
+												"token": user.email_verification_token,
 											}
 										}
 									],
