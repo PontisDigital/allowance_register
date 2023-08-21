@@ -89,6 +89,7 @@ async fn function_handler(event: Request) -> Result<Response<Body>, Error>
 						email_verification_token: Uuid::new_v4().to_string(),
 						email_verified: false,
 						test: None,
+						is_public: false,
 					};
 					
 					// insert user into db
