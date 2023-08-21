@@ -1,35 +1,9 @@
+use allowance::{Merchant, Allowance, User};
 use lambda_http::{run, service_fn, Body, Error, Request, Response};
 use serde_json::json;
 use firestore::FirestoreDb;
 use chrono::Utc;
 use uuid::Uuid;
-
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
-struct Allowance
-{
-	amount: String,
-	merchant_uid: String,
-}
-
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
-struct User
-{
-	email: String,
-	username: String,
-	created_at: String,
-	user_id: String,
-	email_verification_token: String,
-	email_verified: bool,
-}
-
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
-struct Merchant
-{
-	name: String,
-	logo_url: String,
-	email: String,
-	merchant_uid: String,
-}
 
 #[derive(serde::Deserialize, serde::Serialize, Default)]
 struct ApiEntryReq
@@ -114,6 +88,7 @@ async fn function_handler(event: Request) -> Result<Response<Body>, Error>
 						user_id: res.local_id,
 						email_verification_token: Uuid::new_v4().to_string(),
 						email_verified: false,
+						test: None,
 					};
 					
 					// insert user into db

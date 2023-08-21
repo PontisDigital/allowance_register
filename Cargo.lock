@@ -40,9 +40,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "allowance"
+version = "0.1.0"
+dependencies = [
+ "firestore",
+ "rust_decimal",
+ "serde",
+ "serde_derive",
+]
+
+[[package]]
 name = "allowance_sign_up"
 version = "0.1.0"
 dependencies = [
+ "allowance",
  "chrono",
  "firebase-auth-sdk",
  "firestore",

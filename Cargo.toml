@@ -30,3 +30,4 @@ tracing-subscriber = { version = "0.3", default-features = false, features = ["f
 rust_decimal = "1.31.0"
 firebase-auth-sdk = "0.1.0"
 uuid = {version = "1.4.1", features = ["serde", "v4"]}
+allowance = {path = "../allowance"}
