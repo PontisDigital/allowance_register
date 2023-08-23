@@ -85,11 +85,12 @@ async fn function_handler(event: Request) -> Result<Response<Body>, Error>
 						email: res.email,
 						username: entry_req.username.to_lowercase(),
 						created_at: Utc::now().to_rfc3339(),
+						photo_url: None,
 						user_id: res.local_id,
 						email_verification_token: Uuid::new_v4().to_string(),
 						email_verified: false,
 						test: None,
-						is_public: false,
+						is_public: Some(false),
 					};
 					
 					// insert user into db
