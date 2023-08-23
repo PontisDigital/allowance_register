@@ -107,7 +107,7 @@ async fn function_handler(event: Request) -> Result<Response<Body>, Error>
 										.select()
 										.by_id_in("merchants")
 										.obj::<Merchant>()
-										.one("dfB2bV9udtSHu7GE4p6r4SQvxN52")
+										.one("zzy3wQDdmwXXjzVu4eCx3QRAQ1J3")
 										.await?.unwrap();
 
 					let allowance = Allowance {
